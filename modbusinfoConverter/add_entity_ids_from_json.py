@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Add entity_id field to JSON configs using English names from existing files.
+"""Add entity_id field to JSON configs using English data.
 
 This script is useful when Excel source files are not available but both
-German and English JSON configs exist.
+German and English JSON configs exist. It generates language-independent
+entity_id values that include the equipment index (e.g., sol_1_status).
 """
 
 import json
@@ -37,6 +38,10 @@ _ENTITY_ID_REPLACEMENTS = str.maketrans({
     '"': "",
 })
 
+# Equipment prefixes that are 0-indexed (need +1 for entity_id)
+# Includes both English and German variants
+ZERO_INDEXED_PREFIXES = {"PUF", "BUF", "ZIR", "Circ", "WMZ", "HQM", "Zirk"}
+
 
 def sanitize_for_entity_id(name: str) -> str:
     """Sanitize a string for use in Home Assistant entity IDs."""
@@ -52,12 +57,52 @@ def sanitize_for_entity_id(name: str) -> str:
     return result
 
 
-def load_english_names_from_json(en_dir: Path) -> dict[int, str]:
-    """Load English register names from JSON files.
+def sanitize_index_for_entity_id(index: str) -> str | None:
+    """Sanitize an index string for use in entity_id.
 
-    Returns a mapping of starting_address -> English name.
+    Converts index like "SOL 1", "PUF 0", "HK 1.1" to entity_id format
+    like "sol_1", "puf_1", "hk_1_1". Handles 0-indexed equipment by converting to 1-based.
+
+    Args:
+        index: The index string (e.g., "SOL 1", "PUF 0", "HK 1.1")
+
+    Returns:
+        Sanitized index string like "sol_1", "hk_1_1", or None if not applicable
     """
-    english_names: dict[int, str] = {}
+    if not index:
+        return None
+
+    # Split into prefix and number part
+    parts = index.split(" ", 1)
+    if len(parts) != 2:
+        return None
+
+    prefix = parts[0].strip()
+    number_part = parts[1].strip()
+
+    # Convert 0-indexed equipment to 1-based
+    if prefix in ZERO_INDEXED_PREFIXES:
+        try:
+            num = int(number_part)
+            number_part = str(num + 1)
+        except ValueError:
+            pass  # Keep original if not a simple number
+
+    # Replace dots with underscores for heating circuits (HK 1.1 -> hk_1_1)
+    sanitized_number = number_part.replace(".", "_")
+
+    # Sanitize the prefix (lowercase, handle special chars)
+    sanitized_prefix = sanitize_for_entity_id(prefix)
+
+    return f"{sanitized_prefix}_{sanitized_number}"
+
+
+def load_english_data_from_json(en_dir: Path) -> dict[int, dict[str, str]]:
+    """Load English register data (name and index) from JSON files.
+
+    Returns a mapping of starting_address -> {"name": str, "index": str}.
+    """
+    english_data: dict[int, dict[str, str]] = {}
 
     # Process all JSON files in the English directory
     for json_file in en_dir.rglob("*.json"):
@@ -78,37 +123,63 @@ def load_english_names_from_json(en_dir: Path) -> dict[int, str]:
             for reg in registers:
                 address = reg.get("starting_address")
                 name = reg.get("name")
+                index = reg.get("index")
                 if address is not None and name:
-                    english_names[int(address)] = str(name).strip()
+                    entry = {"name": str(name).strip()}
+                    if index:
+                        entry["index"] = str(index).strip()
+                    english_data[int(address)] = entry
 
         except Exception as e:
             print(f"  Warning: Could not process {json_file}: {e}")
 
-    return english_names
+    return english_data
 
 
-def add_entity_ids_to_registers(registers: list[dict], english_names: dict[int, str]) -> int:
-    """Add entity_id field to registers list.
+def add_entity_ids_to_registers(registers: list[dict], english_data: dict[int, dict[str, str]]) -> int:
+    """Add or update entity_id field to registers list (includes index prefix).
+
+    Also removes deprecated entity_index field if present.
 
     Returns count of registers updated.
     """
     updated = 0
     for reg in registers:
-        if "entity_id" in reg:
-            continue  # Already has entity_id
-
         address = reg.get("starting_address")
         if address is None:
             continue
 
-        # Get English name, fall back to current name
-        english_name = english_names.get(int(address), reg.get("name", ""))
-        entity_id = sanitize_for_entity_id(english_name)
+        # Get English data, fall back to current register data
+        en_data = english_data.get(int(address), {})
+        english_name = en_data.get("name", reg.get("name", ""))
+        english_index = en_data.get("index", "")
 
-        if entity_id:
-            # Insert entity_id after name for consistent ordering
+        # Generate base entity_id from English name
+        base_entity_id = sanitize_for_entity_id(english_name)
+
+        # Include English index in entity_id if present
+        if english_index:
+            index_prefix = sanitize_index_for_entity_id(english_index)
+            if index_prefix:
+                entity_id = f"{index_prefix}_{base_entity_id}"
+            else:
+                entity_id = base_entity_id
+        else:
+            entity_id = base_entity_id
+
+        # Check if update is needed
+        current_entity_id = reg.get("entity_id", "")
+        has_entity_index = "entity_index" in reg
+        needs_update = (current_entity_id != entity_id) or has_entity_index
+
+        if entity_id and needs_update:
+            # Rebuild register with updated entity_id and without entity_index
             new_reg = {}
             for key, value in reg.items():
+                if key == "entity_index":
+                    continue  # Remove deprecated field
+                if key == "entity_id":
+                    continue  # Skip old entity_id, we'll insert the new one
                 new_reg[key] = value
                 if key == "name":
                     new_reg["entity_id"] = entity_id
@@ -119,7 +190,7 @@ def add_entity_ids_to_registers(registers: list[dict], english_names: dict[int, 
     return updated
 
 
-def process_json_file(json_file: Path, english_names: dict[int, str]) -> bool:
+def process_json_file(json_file: Path, english_data: dict[int, dict[str, str]]) -> bool:
     """Process a single JSON file to add entity_id fields.
 
     Returns True if file was modified.
@@ -132,13 +203,13 @@ def process_json_file(json_file: Path, english_names: dict[int, str]) -> bool:
 
         # Handle different JSON structures
         if "universal_registers" in data:
-            count = add_entity_ids_to_registers(data["universal_registers"], english_names)
+            count = add_entity_ids_to_registers(data["universal_registers"], english_data)
             if count > 0:
                 modified = True
                 print(f"    Updated {count} universal registers")
 
         if "registers" in data:
-            count = add_entity_ids_to_registers(data["registers"], english_names)
+            count = add_entity_ids_to_registers(data["registers"], english_data)
             if count > 0:
                 modified = True
                 print(f"    Updated {count} registers")
@@ -163,9 +234,9 @@ def process_version(version_dir: Path) -> None:
         print(f"  No English directory found, skipping")
         return
 
-    print(f"  Loading English names from {en_dir}...")
-    english_names = load_english_names_from_json(en_dir)
-    print(f"  Loaded {len(english_names)} English names")
+    print(f"  Loading English data from {en_dir}...")
+    english_data = load_english_data_from_json(en_dir)
+    print(f"  Loaded {len(english_data)} English entries")
 
     # Process both language directories
     for lang_dir in [de_dir, en_dir]:
@@ -180,7 +251,7 @@ def process_version(version_dir: Path) -> None:
 
             relative = json_file.relative_to(lang_dir)
             print(f"    {relative}...")
-            process_json_file(json_file, english_names)
+            process_json_file(json_file, english_data)
 
 
 def main():

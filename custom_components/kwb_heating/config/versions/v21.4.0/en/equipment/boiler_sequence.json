@@ -87,12 +87,12 @@
     {
       "starting_address": 9402,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_1_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 1",
+      "index": "B 1",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -100,12 +100,12 @@
     {
       "starting_address": 9403,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_2_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 2",
+      "index": "B 2",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -113,12 +113,12 @@
     {
       "starting_address": 9404,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_3_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 3",
+      "index": "B 3",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -126,12 +126,12 @@
     {
       "starting_address": 9405,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_4_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 4",
+      "index": "B 4",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -139,12 +139,12 @@
     {
       "starting_address": 9406,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_5_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 5",
+      "index": "B 5",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -152,12 +152,12 @@
     {
       "starting_address": 9407,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_6_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 6",
+      "index": "B 6",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -165,12 +165,12 @@
     {
       "starting_address": 9408,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_7_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 7",
+      "index": "B 7",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -178,12 +178,12 @@
     {
       "starting_address": 9409,
       "name": "Request",
-      "entity_id": "request",
+      "entity_id": "b_8_request",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 8",
+      "index": "B 8",
       "unit_value_table": "system_ein_aus_t",
       "id": "1353",
       "parameter": "KFK.o_anforderung"
@@ -191,12 +191,12 @@
     {
       "starting_address": 9422,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_1_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 1",
+      "index": "B 1",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -204,12 +204,12 @@
     {
       "starting_address": 9423,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_2_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 2",
+      "index": "B 2",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -217,12 +217,12 @@
     {
       "starting_address": 9424,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_3_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 3",
+      "index": "B 3",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -230,12 +230,12 @@
     {
       "starting_address": 9425,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_4_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 4",
+      "index": "B 4",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -243,12 +243,12 @@
     {
       "starting_address": 9426,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_5_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 5",
+      "index": "B 5",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -256,12 +256,12 @@
     {
       "starting_address": 9427,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_6_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 6",
+      "index": "B 6",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -269,12 +269,12 @@
     {
       "starting_address": 9428,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_7_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 7",
+      "index": "B 7",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"
@@ -282,12 +282,12 @@
     {
       "starting_address": 9429,
       "name": "Fault",
-      "entity_id": "fault",
+      "entity_id": "b_8_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
       "expert_level": "read",
-      "index": "KFS 8",
+      "index": "B 8",
       "unit_value_table": "system_yes_no_t",
       "id": "1371",
       "parameter": "KFK.i_stoerung"

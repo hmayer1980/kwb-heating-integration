@@ -48,6 +48,9 @@ class ModbusInfoConverter:
         '"': "",
     })
 
+    # Equipment prefixes that are 0-indexed (need +1 for entity_id)
+    ZERO_INDEXED_PREFIXES = {"PUF", "BUF", "ZIR", "Circ", "WMZ", "HQM", "Zirk"}
+
     # Sheet categories
     #UNIVERSAL_SHEET = "Universal"
     # WMM Autonom is NOT a device - it contains universal Modbus lifetick registers
@@ -114,8 +117,8 @@ class ModbusInfoConverter:
         """Initialize converter."""
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
-        # Cache for English names lookup: {version: {starting_address: english_name}}
-        self._english_names_cache: dict[str, dict[int, str]] = {}
+        # Cache for English data lookup: {version: {starting_address: {"name": str, "index": str}}}
+        self._english_data_cache: dict[str, dict[int, dict[str, str]]] = {}
 
     def sanitize_for_entity_id(self, name: str) -> str:
         """Sanitize a string for use in Home Assistant entity IDs.
@@ -152,27 +155,27 @@ class ModbusInfoConverter:
             return {"language": language, "version": version}
         return {}
 
-    def load_english_names(self, version: str) -> dict[int, str]:
-        """Load English register names for a specific version.
+    def load_english_data(self, version: str) -> dict[int, dict[str, str]]:
+        """Load English register data (name and index) for a specific version.
 
-        Returns a mapping of starting_address -> English name for use
+        Returns a mapping of starting_address -> {"name": str, "index": str} for use
         in generating language-independent entity IDs.
         """
-        if version in self._english_names_cache:
-            return self._english_names_cache[version]
+        if version in self._english_data_cache:
+            return self._english_data_cache[version]
 
-        english_names: dict[int, str] = {}
+        english_data: dict[int, dict[str, str]] = {}
         en_file = self.input_dir / f"ModbusInfo-en-V{version}.xlsx"
 
         if not en_file.exists():
             logger.warning(f"English file not found for version {version}: {en_file}")
-            self._english_names_cache[version] = english_names
-            return english_names
+            self._english_data_cache[version] = english_data
+            return english_data
 
         try:
             workbook = openpyxl.load_workbook(en_file, data_only=True)
 
-            # Collect names from all relevant sheets
+            # Collect data from all relevant sheets
             all_sheets = (
                 self.UNIVERSAL_SHEETS +
                 self.DEVICE_SHEETS +
@@ -191,7 +194,7 @@ class ModbusInfoConverter:
                     if not any(row) or row[0] is None:
                         continue
 
-                    # Get StartingAddress and Name
+                    # Get StartingAddress, Name, and Index
                     row_dict = {}
                     for i, value in enumerate(row):
                         if i < len(headers) and headers[i]:
@@ -199,31 +202,35 @@ class ModbusInfoConverter:
 
                     address = row_dict.get("StartingAddress")
                     name = row_dict.get("Name")
+                    index = row_dict.get("Index")
 
                     if address is not None and name:
-                        english_names[int(address)] = str(name).strip()
+                        data = {"name": str(name).strip()}
+                        if index:
+                            data["index"] = str(index).strip()
+                        english_data[int(address)] = data
 
             workbook.close()
-            logger.info(f"  Loaded {len(english_names)} English names for version {version}")
+            logger.info(f"  Loaded {len(english_data)} English entries for version {version}")
 
         except Exception as exc:
-            logger.error(f"Error loading English names for version {version}: {exc}")
+            logger.error(f"Error loading English data for version {version}: {exc}")
 
-        self._english_names_cache[version] = english_names
-        return english_names
+        self._english_data_cache[version] = english_data
+        return english_data
 
     def read_register_sheet(
         self,
         workbook: openpyxl.Workbook,
         sheet_name: str,
-        english_names: dict[int, str] | None = None
+        english_data: dict[int, dict[str, str]] | None = None
     ) -> list[dict]:
         """Read register data from Excel sheet.
 
         Args:
             workbook: The Excel workbook
             sheet_name: Name of the sheet to read
-            english_names: Optional mapping of starting_address -> English name
+            english_data: Optional mapping of starting_address -> {"name": str, "index": str}
                           for generating language-independent entity IDs
         """
         if sheet_name not in workbook.sheetnames:
@@ -245,46 +252,61 @@ class ModbusInfoConverter:
                 if i < len(headers) and headers[i]:
                     row_dict[headers[i]] = value
 
-            register = self.normalize_register(row_dict, english_names)
+            register = self.normalize_register(row_dict, english_data)
             if register:
                 registers.append(register)
 
         return registers
 
-    # Map English index prefixes to German equivalents for consistency
-    INDEX_PREFIX_MAP = {
-        "HC": "HK",      # Heating Circuit -> Heizkreis
-        "BUF": "PUF",    # Buffer -> Puffer
-        "DHWC": "BWS",   # DHW Cylinder -> Brauchwasserspeicher
-        "SHS": "ZWQ",    # Secondary Heat Source -> Zweitwärmequelle
-        "Circ": "ZIR",   # Circulation -> Zirkulation
-        "B": "KFS",      # Boiler (sequence) -> Kesselfolgeschaltung
-        "HQM": "WMZ",    # Heat Quantity Meter -> Wärmemengenzähler
-        # SOL stays as SOL (same in both languages)
-    }
+    def _sanitize_index_for_entity_id(self, index: str) -> str | None:
+        """Sanitize an index string for use in entity_id.
 
-    def _normalize_index(self, index: str) -> str:
-        """Normalize index prefix to use consistent German abbreviations."""
+        Converts index like "SOL 1", "PUF 0", "HK 1.1" to entity_id format
+        like "sol_1", "puf_1", "hk_1_1". Handles 0-indexed equipment by converting to 1-based.
+
+        Args:
+            index: The index string (e.g., "SOL 1", "PUF 0", "HK 1.1")
+
+        Returns:
+            Sanitized index string like "sol_1", "hk_1_1", or None if not applicable
+        """
         if not index:
-            return index
+            return None
 
-        # Check each English prefix and replace with German equivalent
-        for en_prefix, de_prefix in self.INDEX_PREFIX_MAP.items():
-            if index.startswith(en_prefix + " "):
-                return de_prefix + index[len(en_prefix):]
+        # Split into prefix and number part
+        parts = index.split(" ", 1)
+        if len(parts) != 2:
+            return None
 
-        return index
+        prefix = parts[0].strip()
+        number_part = parts[1].strip()
+
+        # Convert 0-indexed equipment to 1-based
+        if prefix in self.ZERO_INDEXED_PREFIXES:
+            try:
+                num = int(number_part)
+                number_part = str(num + 1)
+            except ValueError:
+                pass  # Keep original if not a simple number
+
+        # Replace dots with underscores for heating circuits (HK 1.1 -> hk_1_1)
+        sanitized_number = number_part.replace(".", "_")
+
+        # Sanitize the prefix (lowercase, handle special chars)
+        sanitized_prefix = self.sanitize_for_entity_id(prefix)
+
+        return f"{sanitized_prefix}_{sanitized_number}"
 
     def normalize_register(
         self,
         data: dict,
-        english_names: dict[int, str] | None = None
+        english_data: dict[int, dict[str, str]] | None = None
     ) -> dict | None:
         """Normalize register data to standard format.
 
         Args:
             data: Raw register data from Excel row
-            english_names: Optional mapping of starting_address -> English name
+            english_data: Optional mapping of starting_address -> {"name": str, "index": str}
                           for generating language-independent entity IDs
         """
         # Skip if no address
@@ -295,10 +317,23 @@ class ModbusInfoConverter:
         address_int = int(address)
         name = str(data.get("Name", "")).strip() if data.get("Name") else ""
 
+        # Get English data for language-independent entity_id
+        en_data = english_data.get(address_int, {}) if english_data else {}
+        english_name = en_data.get("name", name)
+        english_index = en_data.get("index", "")
+
         # Generate entity_id from English name (language-independent)
-        # Fall back to current name if English not available
-        english_name = english_names.get(address_int, name) if english_names else name
-        entity_id = self.sanitize_for_entity_id(english_name)
+        base_entity_id = self.sanitize_for_entity_id(english_name)
+
+        # Include English index in entity_id if present
+        if english_index:
+            index_prefix = self._sanitize_index_for_entity_id(english_index)
+            if index_prefix:
+                entity_id = f"{index_prefix}_{base_entity_id}"
+            else:
+                entity_id = base_entity_id
+        else:
+            entity_id = base_entity_id
 
         # Build normalized register
         register = {
@@ -311,9 +346,9 @@ class ModbusInfoConverter:
             "expert_level": self._parse_access_level(data.get("ExpertLevel")),
         }
 
-        # Optional fields - normalize index to use German prefixes
+        # Keep the original index field for display purposes
         if data.get("Index"):
-            register["index"] = self._normalize_index(str(data.get("Index")).strip())
+            register["index"] = str(data.get("Index")).strip()
 
         if data.get("Unit/ValueTable"):
             unit_or_table = str(data.get("Unit/ValueTable")).strip()
@@ -455,7 +490,7 @@ class ModbusInfoConverter:
         language = file_info["language"]
 
         # Load English names for entity_id generation (language-independent IDs)
-        english_names = self.load_english_names(version)
+        english_data = self.load_english_data(version)
 
         # Create output directory structure
         version_dir = self.output_dir / f"v{version}" / language
@@ -479,7 +514,7 @@ class ModbusInfoConverter:
         for sheet_name in self.UNIVERSAL_SHEETS:
             if sheet_name in workbook.sheetnames:
                 logger.info(f"  Reading {sheet_name} sheet...")
-                registers = self.read_register_sheet(workbook, sheet_name, english_names)
+                registers = self.read_register_sheet(workbook, sheet_name, english_data)
                 universal_registers.extend(registers)
                 logger.info(f"    Found {len(registers)} registers")
 
@@ -495,7 +530,7 @@ class ModbusInfoConverter:
         combifire_base_registers = []
         if "KWB Combifire" in workbook.sheetnames:
             logger.info(f"  Reading KWB Combifire sheet (base for CF models)...")
-            combifire_base_registers = self.read_register_sheet(workbook, "KWB Combifire", english_names)
+            combifire_base_registers = self.read_register_sheet(workbook, "KWB Combifire", english_data)
             logger.info(f"    Found {len(combifire_base_registers)} base registers")
 
         # CF models that inherit from Combifire
@@ -509,7 +544,7 @@ class ModbusInfoConverter:
 
             if sheet_name in workbook.sheetnames:
                 logger.info(f"  Reading {sheet_name} sheet...")
-                device_registers = self.read_register_sheet(workbook, sheet_name, english_names)
+                device_registers = self.read_register_sheet(workbook, sheet_name, english_data)
 
                 # Special handling for CF models: merge with Combifire base
                 if sheet_name in cf_models and combifire_base_registers:
@@ -546,7 +581,7 @@ class ModbusInfoConverter:
                 filename = self.EQUIPMENT_FILE_MAP.get(sheet_name)
                 if filename and filename not in processed_equipment:
                     logger.info(f"  Reading {sheet_name} sheet...")
-                    equipment_registers = self.read_register_sheet(workbook, sheet_name, english_names)
+                    equipment_registers = self.read_register_sheet(workbook, sheet_name, english_data)
                     if equipment_registers:
                         equipment_file = equipment_dir / filename
                         with open(equipment_file, 'w', encoding='utf-8') as f:

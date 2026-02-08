@@ -41,7 +41,7 @@ class KWBBaseEntity(CoordinatorEntity):
         )
 
         # Set explicit entity_id to ensure device name prefix is included
-        # Use pre-generated entity_id from register config if available (language-independent)
+        # Use pre-generated entity_id from register config (language-independent, includes equipment index)
         # Otherwise fall back to sanitizing the localized register name
         device_prefix = coordinator.sanitize_for_entity_id(coordinator.device_name_prefix)
         register_entity_id = register.get("entity_id") or coordinator.sanitize_for_entity_id(register["name"])
