@@ -1,0 +1,245 @@
+type: custom:floorplan-card
+config:
+  defaults:
+    hover_action: hover-info
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/heizung
+  image:
+    location: /local/floorplan/kwb/boiler.svg
+    cache: false
+  rules:
+    - element: ThermometerKalt
+      entity: sensor.heizungsanlage_temperature_2_value
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.state >= 60 ? \"display: none;\":\"\"}"
+    - element: ThermometerNormal
+      entity: sensor.heizungsanlage_temperature_2_value
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.state < 60 || entity.state >= 80 ? \"display: none;\":\"\"}"
+    - element: ThermometerHeiss
+      entity: sensor.heizungsanlage_temperature_2_value
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.state < 80 ? \"display: none;\":\"\"}"
+    - element: KesselStoerung
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${entity.attributes.raw_value == 7 || entity.attributes.raw_value ==
+            8 || entity.attributes.raw_value == 44 ||
+            entity.attributes.raw_value == 47 ? "" : "display: none;" }
+    - element: KesselFeuerklappeEin
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${(entity.attributes.raw_value == 2) || (entity.attributes.raw_value
+            == 4) || (41 <= entity.attributes.raw_value &&
+            entity.attributes.raw_value <= 42) ? "" : "display: none;" }
+    - element: KesselFeuerklappeAus
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${((entity.attributes.raw_value >= 2) &&
+            (entity.attributes.raw_value <= 4)) || (41 <=
+            entity.attributes.raw_value && entity.attributes.raw_value <= 42) ?
+            "display: none;" : "" }
+    - element: KesselFlammeEin
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${entity.attributes.raw_value == 2 || entity.attributes.raw_value ==
+            4 || (11 <= entity.attributes.raw_value &&
+            entity.attributes.raw_value <= 19) || (39 <=
+            entity.attributes.raw_value && entity.attributes.raw_value <= 42) ?
+            "" : "display: none;" }
+    - element: KesselFlammeAus
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${entity.attributes.raw_value == 2 || entity.attributes.raw_value ==
+            4 || (11 <= entity.attributes.raw_value &&
+            entity.attributes.raw_value <= 19) || (39 <=
+            entity.attributes.raw_value && entity.attributes.raw_value <= 42) ?
+            "display: none;" : "" }
+    - element: KesselOval
+      entity: sensor.heizungsanlage_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${(21 <= entity.attributes.raw_value && entity.attributes.raw_value
+            <= 34) ? "fill-opacity:1;" : "fill-opacity:0;" }
+    - element: Nachlegebalken
+      entity: sensor.heizungsanlage_maximum_fill_level
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: |
+            ${entity.attributes.raw_value == 0 ? "display: none;" : 
+             entity.attributes.raw_value == 1 ? "fill: url(#nachlegebalken-gradient-33);" :
+             entity.attributes.raw_value == 2 ? "fill: url(#nachlegebalken-gradient-67);" :
+             entity.attributes.raw_value == 3 ? "fill: url(#nachlegebalken-gradient-100);" : ""}
+    - element: PelletmodulStoerung
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.attributes.raw_value == 5 ? \"\" : \"display: none;\" }"
+    - element: PelletmodulFeuerklappeEin
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${(entity.attributes.raw_value == 3) || (entity.attributes.raw_value
+            == 4) ? "" : "display: none;" }
+    - element: PelletmodulFeuerklappeAus
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${(entity.attributes.raw_value == 3) || (entity.attributes.raw_value
+            == 4) ? "display: none;" : "" }
+    - element: PelletmodulFlammeEin
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${2 == entity.attributes.raw_value || entity.attributes.raw_value ==
+            3 ? "" : "display: none;" }
+    - element: PelletmodulFlammeAus
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${ 2 == entity.attributes.raw_value || entity.attributes.raw_value
+            == 3 ? "display: none;" : "" }
+    - element: PelletmodulGesperrt
+      entity: switch.heizungsanlage_boiler_on_off
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.attributes.raw_value==0 ? \"\" : \"display: none;\" }"
+    - element: PelletmodulFreigegeben
+      entity: switch.heizungsanlage_boiler_on_off
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: "${entity.attributes.raw_value==1 ? \"\" : \"display: none;\" }"
+    - element: PelletmodulOval
+      entity: sensor.heizungsanlage_pellet_boiler_status
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            ${(21 <= entity.attributes.raw_value && entity.attributes.raw_value
+            <= 34) ? "fill-opacity:1;" : "fill-opacity:0;" }
+    - element: PelletmodulAschekasten
+      entity: sensor.heizungsanlage_fill_level_ash_container
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            fill: #888888; clip-path: polygon(0% 0%, ${entity.state}% 0%,
+            ${entity.state}% 100%, 0% 100%);
+    - element: Pelletspeicher
+      entity: number.heizungsanlage_residual_amount_fuel_storage
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/heizung
+      state_action:
+        action: call-service
+        service: floorplan.style_set
+        service_data:
+          style: >-
+            fill: #9a3737; clip-path: polygon(0% 0%, ${entity.state}% 0%,
+            ${entity.state}% 100%, 0% 100%);
+  stylesheet: /local/floorplan/kwb/boiler.css

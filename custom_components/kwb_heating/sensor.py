@@ -255,8 +255,9 @@ class KWBLastFirewoodFireSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         device_prefix_id = coordinator.sanitize_for_entity_id(device_prefix)
         self._attr_unique_id = f"kwb_heating_{device_identifier}_{device_prefix_id}_last_firewood_fire"
 
-        # Set explicit entity_id using language-specific suffix
-        self._attr_entity_id = f"sensor.{device_prefix_id}_{translations['entity_id_suffix']}"
+        # Set explicit entity_id - always use English for language-independent IDs
+        english_suffix = FIREWOOD_SENSOR_TRANSLATIONS["en"]["entity_id_suffix"]
+        self._attr_entity_id = f"sensor.{device_prefix_id}_{english_suffix}"
 
         # Set device info
         self._attr_device_info = coordinator.device_info

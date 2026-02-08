@@ -21,6 +21,33 @@ logger = logging.getLogger(__name__)
 class ModbusInfoConverter:
     """Converts ModbusInfo Excel files to JSON configuration."""
 
+    # Character replacements for entity ID sanitization (same as coordinator.py)
+    _ENTITY_ID_REPLACEMENTS = str.maketrans({
+        " ": "_",
+        ".": "_",
+        "/": "_",
+        "-": "_",
+        ":": "_",
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "Ä": "ae",
+        "Ö": "oe",
+        "Ü": "ue",
+        "ß": "ss",
+        "&": "and",
+        "@": "at",
+        "(": "",
+        ")": "",
+        "#": "",
+        "!": "",
+        "?": "",
+        ",": "",
+        ";": "",
+        "'": "",
+        '"': "",
+    })
+
     # Sheet categories
     #UNIVERSAL_SHEET = "Universal"
     # WMM Autonom is NOT a device - it contains universal Modbus lifetick registers
@@ -87,6 +114,34 @@ class ModbusInfoConverter:
         """Initialize converter."""
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
+        # Cache for English names lookup: {version: {starting_address: english_name}}
+        self._english_names_cache: dict[str, dict[int, str]] = {}
+
+    def sanitize_for_entity_id(self, name: str) -> str:
+        """Sanitize a string for use in Home Assistant entity IDs.
+
+        This mirrors the sanitization logic in coordinator.py to ensure
+        entity IDs are valid and consistent.
+        """
+        if not name:
+            return ""
+
+        # Apply character replacements
+        result = name.translate(self._ENTITY_ID_REPLACEMENTS)
+
+        # Convert to lowercase
+        result = result.lower()
+
+        # Remove any remaining invalid characters
+        result = re.sub(r'[^a-z0-9_]', '', result)
+
+        # Collapse multiple underscores
+        result = re.sub(r'_+', '_', result)
+
+        # Strip leading/trailing underscores
+        result = result.strip('_')
+
+        return result
 
     def parse_filename(self, filename: str) -> dict[str, str]:
         """Parse ModbusInfo filename to extract version and language."""
@@ -97,8 +152,80 @@ class ModbusInfoConverter:
             return {"language": language, "version": version}
         return {}
 
-    def read_register_sheet(self, workbook: openpyxl.Workbook, sheet_name: str) -> list[dict]:
-        """Read register data from Excel sheet."""
+    def load_english_names(self, version: str) -> dict[int, str]:
+        """Load English register names for a specific version.
+
+        Returns a mapping of starting_address -> English name for use
+        in generating language-independent entity IDs.
+        """
+        if version in self._english_names_cache:
+            return self._english_names_cache[version]
+
+        english_names: dict[int, str] = {}
+        en_file = self.input_dir / f"ModbusInfo-en-V{version}.xlsx"
+
+        if not en_file.exists():
+            logger.warning(f"English file not found for version {version}: {en_file}")
+            self._english_names_cache[version] = english_names
+            return english_names
+
+        try:
+            workbook = openpyxl.load_workbook(en_file, data_only=True)
+
+            # Collect names from all relevant sheets
+            all_sheets = (
+                self.UNIVERSAL_SHEETS +
+                self.DEVICE_SHEETS +
+                list(self.EQUIPMENT_SHEETS.keys()) +
+                list(self.EQUIPMENT_SHEETS.values())
+            )
+
+            for sheet_name in all_sheets:
+                if sheet_name not in workbook.sheetnames:
+                    continue
+
+                sheet = workbook[sheet_name]
+                headers = [cell.value for cell in sheet[1]]
+
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    if not any(row) or row[0] is None:
+                        continue
+
+                    # Get StartingAddress and Name
+                    row_dict = {}
+                    for i, value in enumerate(row):
+                        if i < len(headers) and headers[i]:
+                            row_dict[headers[i]] = value
+
+                    address = row_dict.get("StartingAddress")
+                    name = row_dict.get("Name")
+
+                    if address is not None and name:
+                        english_names[int(address)] = str(name).strip()
+
+            workbook.close()
+            logger.info(f"  Loaded {len(english_names)} English names for version {version}")
+
+        except Exception as exc:
+            logger.error(f"Error loading English names for version {version}: {exc}")
+
+        self._english_names_cache[version] = english_names
+        return english_names
+
+    def read_register_sheet(
+        self,
+        workbook: openpyxl.Workbook,
+        sheet_name: str,
+        english_names: dict[int, str] | None = None
+    ) -> list[dict]:
+        """Read register data from Excel sheet.
+
+        Args:
+            workbook: The Excel workbook
+            sheet_name: Name of the sheet to read
+            english_names: Optional mapping of starting_address -> English name
+                          for generating language-independent entity IDs
+        """
         if sheet_name not in workbook.sheetnames:
             return []
 
@@ -118,7 +245,7 @@ class ModbusInfoConverter:
                 if i < len(headers) and headers[i]:
                     row_dict[headers[i]] = value
 
-            register = self.normalize_register(row_dict)
+            register = self.normalize_register(row_dict, english_names)
             if register:
                 registers.append(register)
 
@@ -148,17 +275,36 @@ class ModbusInfoConverter:
 
         return index
 
-    def normalize_register(self, data: dict) -> dict | None:
-        """Normalize register data to standard format."""
+    def normalize_register(
+        self,
+        data: dict,
+        english_names: dict[int, str] | None = None
+    ) -> dict | None:
+        """Normalize register data to standard format.
+
+        Args:
+            data: Raw register data from Excel row
+            english_names: Optional mapping of starting_address -> English name
+                          for generating language-independent entity IDs
+        """
         # Skip if no address
         address = data.get("StartingAddress")
         if address is None:
             return None
 
+        address_int = int(address)
+        name = str(data.get("Name", "")).strip() if data.get("Name") else ""
+
+        # Generate entity_id from English name (language-independent)
+        # Fall back to current name if English not available
+        english_name = english_names.get(address_int, name) if english_names else name
+        entity_id = self.sanitize_for_entity_id(english_name)
+
         # Build normalized register
         register = {
-            "starting_address": int(address),
-            "name": str(data.get("Name", "")).strip() if data.get("Name") else "",
+            "starting_address": address_int,
+            "name": name,
+            "entity_id": entity_id,
             "data_type": self._parse_function_code(data.get("Functions")),
             "type": str(data.get("Type", "u16")).strip().lower(),
             "user_level": self._parse_access_level(data.get("UserLevel")),
@@ -308,6 +454,9 @@ class ModbusInfoConverter:
         version = file_info["version"]
         language = file_info["language"]
 
+        # Load English names for entity_id generation (language-independent IDs)
+        english_names = self.load_english_names(version)
+
         # Create output directory structure
         version_dir = self.output_dir / f"v{version}" / language
         version_dir.mkdir(parents=True, exist_ok=True)
@@ -330,7 +479,7 @@ class ModbusInfoConverter:
         for sheet_name in self.UNIVERSAL_SHEETS:
             if sheet_name in workbook.sheetnames:
                 logger.info(f"  Reading {sheet_name} sheet...")
-                registers = self.read_register_sheet(workbook, sheet_name)
+                registers = self.read_register_sheet(workbook, sheet_name, english_names)
                 universal_registers.extend(registers)
                 logger.info(f"    Found {len(registers)} registers")
 
@@ -346,7 +495,7 @@ class ModbusInfoConverter:
         combifire_base_registers = []
         if "KWB Combifire" in workbook.sheetnames:
             logger.info(f"  Reading KWB Combifire sheet (base for CF models)...")
-            combifire_base_registers = self.read_register_sheet(workbook, "KWB Combifire")
+            combifire_base_registers = self.read_register_sheet(workbook, "KWB Combifire", english_names)
             logger.info(f"    Found {len(combifire_base_registers)} base registers")
 
         # CF models that inherit from Combifire
@@ -360,7 +509,7 @@ class ModbusInfoConverter:
 
             if sheet_name in workbook.sheetnames:
                 logger.info(f"  Reading {sheet_name} sheet...")
-                device_registers = self.read_register_sheet(workbook, sheet_name)
+                device_registers = self.read_register_sheet(workbook, sheet_name, english_names)
 
                 # Special handling for CF models: merge with Combifire base
                 if sheet_name in cf_models and combifire_base_registers:
@@ -397,7 +546,7 @@ class ModbusInfoConverter:
                 filename = self.EQUIPMENT_FILE_MAP.get(sheet_name)
                 if filename and filename not in processed_equipment:
                     logger.info(f"  Reading {sheet_name} sheet...")
-                    equipment_registers = self.read_register_sheet(workbook, sheet_name)
+                    equipment_registers = self.read_register_sheet(workbook, sheet_name, english_names)
                     if equipment_registers:
                         equipment_file = equipment_dir / filename
                         with open(equipment_file, 'w', encoding='utf-8') as f:

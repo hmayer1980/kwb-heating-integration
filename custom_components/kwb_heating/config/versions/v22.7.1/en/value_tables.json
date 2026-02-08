@@ -1,20 +1,5 @@
 {
   "value_tables": {
-    "kfk_kesselstatus_t": {
-      "0": "Off",
-      "1": "Standby",
-      "2": "Ignition",
-      "3": "operation",
-      "4": "Afterrun",
-      "5": "Fault"
-    },
-    "ak_externe_vorgabe_t": {
-      "0": "Off",
-      "1": "Temp.",
-      "2": "Power",
-      "3": "Modbus",
-      "4": "Modbus"
-    },
     "ak_anf_bl_ursache_t": {
       "1": "Normal operation",
       "2": "Measuring",
@@ -30,6 +15,13 @@
       "12": "Modbus",
       "13": "Modbus ComfortEnergy"
     },
+    "ak_externe_vorgabe_t": {
+      "0": "Off",
+      "1": "Temp.",
+      "2": "Power",
+      "3": "Modbus",
+      "4": "Modbus"
+    },
     "ak_kesselprogramm_t": {
       "0": "request",
       "1": "Time program",
@@ -37,10 +29,33 @@
       "3": "Modbus temperature",
       "4": "Modbus output+temperature"
     },
-    "system_sensor_status_t": {
-      "0": "Faulty",
-      "1": "Missing",
-      "2": "OK"
+    "boiler_programm_t": {
+      "0": "Time",
+      "1": "Temp.",
+      "2": "Off"
+    },
+    "boiler_status_t": {
+      "0": "Fault",
+      "1": "Off",
+      "2": "Legionella protection",
+      "3": "Holiday",
+      "4": "One-time charge",
+      "5": "Outside of charging time",
+      "6": "Charge to target temp.",
+      "7": "Temp. sufficient",
+      "8": "Blocking protection",
+      "9": "Waiting, pump release",
+      "10": "Boiler overheating",
+      "11": "SHS, overheating",
+      "12": "max. heat reduction",
+      "13": "Afterrun",
+      "14": "Afterrun (waiting release)"
+    },
+    "cf2_automatische_zuendung_t": {
+      "0": "Off",
+      "1": "Selection",
+      "2": "Request",
+      "3": "immediately"
     },
     "cf2_betriebsmodus_t": {
       "0": "None",
@@ -48,6 +63,56 @@
       "2": "Pellets",
       "3": "Log wood (PM afterrun)",
       "4": "Relay test"
+    },
+    "cf2_max_befuellgrad_anzeige_t": {
+      "0": "None",
+      "1": "One third",
+      "2": "Two thirds",
+      "3": "Full"
+    },
+    "hk_modbus_temperatur_auswahl_t": {
+      "0": "Forward flow temp.",
+      "1": "Room temp."
+    },
+    "hk_programm_t": {
+      "0": "Automatic",
+      "1": "Frost protection",
+      "2": "Off",
+      "3": "Comfort",
+      "4": "Reduct"
+    },
+    "hk_status_t": {
+      "0": "Reduct",
+      "1": "Comfort",
+      "2": "Frost protection",
+      "3": "Holiday",
+      "4": "Off",
+      "5": "Screed",
+      "6": "Max. heat reduction",
+      "7": "Max. heat reduction",
+      "8": "Modbus"
+    },
+    "kfk_kesselstatus_t": {
+      "0": "Off",
+      "1": "Standby",
+      "2": "Ignition",
+      "3": "operation",
+      "4": "Afterrun",
+      "5": "Fault"
+    },
+    "kfs_angeforderte_kessel_t": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8"
+    },
+    "kfs_profile_t": {
+      "0": "Winter",
+      "1": "Summer"
     },
     "ksm_kesselstatus_anzeige_t": {
       "0": "Off",
@@ -100,41 +165,16 @@
       "51": "Pellet module locked",
       "52": "Maintenance"
     },
-    "cf2_max_befuellgrad_anzeige_t": {
-      "0": "None",
-      "1": "One third",
-      "2": "Two thirds",
-      "3": "Full"
-    },
-    "cf2_automatische_zuendung_t": {
-      "0": "Off",
-      "1": "Selection",
-      "2": "Request",
-      "3": "immediately"
-    },
-    "hk_programm_t": {
-      "0": "Automatic",
-      "1": "Frost protection",
-      "2": "Off",
-      "3": "Comfort",
-      "4": "Reduct"
-    },
-    "hk_status_t": {
-      "0": "Reduct",
-      "1": "Comfort",
-      "2": "Frost protection",
-      "3": "Holiday",
-      "4": "Off",
-      "5": "Screed",
-      "6": "Max. heat reduction",
-      "7": "Max. heat reduction",
-      "8": "Modbus"
-    },
     "ksm_verbraucher_anforderung_t": {
       "0": "Off",
       "1": "Heat.circ",
       "2": "DHWC",
       "3": "Buffer"
+    },
+    "puffer_o_umschaltventil_t": {
+      "0": "Not available",
+      "1": "Top",
+      "2": "Bottom"
     },
     "puffer_programm_t": {
       "0": "Time",
@@ -142,38 +182,6 @@
       "2": "Off",
       "3": "Time+",
       "4": "Summer"
-    },
-    "puffer_o_umschaltventil_t": {
-      "0": "Not available",
-      "1": "Top",
-      "2": "Bottom"
-    },
-    "boiler_programm_t": {
-      "0": "Time",
-      "1": "Temp.",
-      "2": "Off"
-    },
-    "boiler_status_t": {
-      "0": "Fault",
-      "1": "Off",
-      "2": "Legionella protection",
-      "3": "Holiday",
-      "4": "One-time charge",
-      "5": "Outside of charging time",
-      "6": "Charge to target temp.",
-      "7": "Temp. sufficient",
-      "8": "Blocking protection",
-      "9": "Waiting, pump release",
-      "10": "Boiler overheating",
-      "11": "SHS, overheating",
-      "12": "max. heat reduction",
-      "13": "Afterrun",
-      "14": "Afterrun (waiting release)"
-    },
-    "zirk_programm_t": {
-      "0": "Off",
-      "1": "Automatic",
-      "2": "Continuous operation"
     },
     "solar_status_t": {
       "0": "Off",
@@ -201,27 +209,23 @@
       "13": "Interval function",
       "14": "Back cooling"
     },
-    "kfs_profile_t": {
-      "0": "Winter",
-      "1": "Summer"
-    },
-    "kfs_angeforderte_kessel_t": {
-      "1": "1",
-      "2": "2",
-      "3": "3",
-      "4": "4",
-      "5": "5",
-      "6": "6",
-      "7": "7",
-      "8": "8"
-    },
-    "hk_modbus_temperatur_auswahl_t": {
-      "0": "Forward flow temp.",
-      "1": "Room temp."
-    },
     "system_ein_aus_t": {
       "0": "Off",
       "1": "On"
+    },
+    "system_sensor_status_t": {
+      "0": "Faulty",
+      "1": "Missing",
+      "2": "OK"
+    },
+    "system_yes_no_t": {
+      "0": "No",
+      "1": "Yes"
+    },
+    "zirk_programm_t": {
+      "0": "Off",
+      "1": "Automatic",
+      "2": "Continuous operation"
     }
   }
 }

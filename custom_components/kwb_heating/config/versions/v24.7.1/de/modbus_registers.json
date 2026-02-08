@@ -3,6 +3,7 @@
     {
       "starting_address": 8192,
       "name": "Software (major)",
+      "entity_id": "software_major",
       "data_type": "04",
       "type": "u16",
       "user_level": "read",
@@ -13,6 +14,7 @@
     {
       "starting_address": 8193,
       "name": "Software (minor)",
+      "entity_id": "software_minor",
       "data_type": "04",
       "type": "u16",
       "user_level": "read",
@@ -23,6 +25,7 @@
     {
       "starting_address": 8194,
       "name": "Software (patch)",
+      "entity_id": "software_patch",
       "data_type": "04",
       "type": "u16",
       "user_level": "read",
@@ -33,6 +36,7 @@
     {
       "starting_address": 8195,
       "name": "Revision",
+      "entity_id": "revision",
       "data_type": "04",
       "type": "u32",
       "user_level": "read",
@@ -44,6 +48,7 @@
     {
       "starting_address": 8204,
       "name": "Anlage OK",
+      "entity_id": "system_ok",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
@@ -55,6 +60,7 @@
     {
       "starting_address": 8205,
       "name": "Summenstörung",
+      "entity_id": "group_fault",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
@@ -66,6 +72,7 @@
     {
       "starting_address": 8252,
       "name": "Anzahl Alarme",
+      "entity_id": "number_of_alarms",
       "data_type": "04",
       "type": "u32",
       "user_level": "read",
@@ -77,6 +84,7 @@
     {
       "starting_address": 8254,
       "name": "Anzahl offene Alarme",
+      "entity_id": "number_of_pending_alarms",
       "data_type": "04",
       "type": "u32",
       "user_level": "read",
@@ -88,6 +96,7 @@
     {
       "starting_address": 10022,
       "name": "Summenstörung mit Kesselabschaltung",
+      "entity_id": "group_fault_including_boiler_shutdown",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
@@ -99,6 +108,7 @@
     {
       "starting_address": 10024,
       "name": "Kesseltyp",
+      "entity_id": "boiler_type",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
@@ -110,6 +120,7 @@
     {
       "starting_address": 10025,
       "name": "WMM Rolle",
+      "entity_id": "wmm_role",
       "data_type": "04",
       "type": "s16",
       "user_level": "read",
@@ -121,6 +132,7 @@
     {
       "starting_address": 24582,
       "name": "Alarme beheben",
+      "entity_id": "rectify_alarms",
       "data_type": "03",
       "type": "s16",
       "user_level": "readwrite",
@@ -132,6 +144,7 @@
     {
       "starting_address": 25159,
       "name": "Modbus Lifetick Kessel ignorieren",
+      "entity_id": "modbus_lifetick_ignore_boiler",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
@@ -143,6 +156,7 @@
     {
       "starting_address": 25160,
       "name": "Modbus Lifetick Heizkreise ignorieren",
+      "entity_id": "modbus_lifetick_ignore_heating_circuits",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
@@ -154,6 +168,7 @@
     {
       "starting_address": 25161,
       "name": "Modbus Lifetick Solaranlagen ignorieren",
+      "entity_id": "modbus_lifetick_ignore_solar_systems",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
@@ -165,6 +180,7 @@
     {
       "starting_address": 25162,
       "name": "Modbus Lifetick Zweitwärmequellen Wärmepumpen ignorieren",
+      "entity_id": "modbus_lifetick_ignore_secondary_heating_sources_heat_pumps",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
@@ -176,6 +192,7 @@
     {
       "starting_address": 25163,
       "name": "Modbus Lifetick Zusatzwärmequellen ignorieren",
+      "entity_id": "modbus_lifetick_ignore_additionally_heating_sources",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
@@ -187,6 +204,7 @@
     {
       "starting_address": 25164,
       "name": "Modbus Lifetick Überschussstromkontakt (MFA) ignorieren",
+      "entity_id": "modbus_lifetick_ignore_surplus_electricity_contact",
       "data_type": "03",
       "type": "s16",
       "user_level": "read",
