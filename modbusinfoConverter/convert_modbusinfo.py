@@ -79,6 +79,15 @@ class ModbusInfoConverter:
     ALARMS_SHEET = "Alarms"
     VALUE_TABLES_SHEET = "ValueTables"
 
+    # Required value tables that must always be present (may be missing from Excel)
+    # Format: {table_name: {language: {value: translation}}}
+    REQUIRED_VALUE_TABLES = {
+        "system_ein_aus_t": {
+            "en": {"0": "Off", "1": "On"},
+            "de": {"0": "Aus", "1": "Ein"},
+        }
+    }
+
     # Use consistent English filenames for equipment
     EQUIPMENT_FILE_MAP = {
         "Heizkreise": "heating_circuits.json",
@@ -431,6 +440,32 @@ class ModbusInfoConverter:
 
         return value_tables
 
+    def ensure_required_value_tables(self, value_tables: dict, language: str) -> dict:
+        """Ensure all required value tables are present.
+
+        Some value tables (like system_ein_aus_t) are referenced in equipment files
+        but may be missing from the Excel ValueTables sheet. This method adds them
+        if they're not present.
+
+        Args:
+            value_tables: The value tables read from Excel
+            language: The language code ('en' or 'de')
+
+        Returns:
+            Updated value_tables dict with required tables added if missing
+        """
+        for table_name, translations in self.REQUIRED_VALUE_TABLES.items():
+            if table_name not in value_tables:
+                if language in translations:
+                    value_tables[table_name] = translations[language]
+                    logger.info(f"    Added missing required value table: {table_name}")
+                elif "en" in translations:
+                    # Fallback to English if language not found
+                    value_tables[table_name] = translations["en"]
+                    logger.info(f"    Added missing required value table: {table_name} (fallback to en)")
+
+        return value_tables
+
     def read_alarm_codes(self, workbook: openpyxl.Workbook) -> list[dict]:
         """Read alarm codes from Excel."""
         if self.ALARMS_SHEET not in workbook.sheetnames:
@@ -594,6 +629,8 @@ class ModbusInfoConverter:
         # Read and save value tables
         logger.info(f"  Reading {self.VALUE_TABLES_SHEET}...")
         value_tables = self.read_value_tables(workbook)
+        # Ensure required value tables are present (some may be missing from Excel)
+        value_tables = self.ensure_required_value_tables(value_tables, language)
         value_tables_file = version_dir / "value_tables.json"
         with open(value_tables_file, 'w', encoding='utf-8') as f:
             json.dump({

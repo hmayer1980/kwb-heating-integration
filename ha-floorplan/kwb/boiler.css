@@ -1,103 +1,54 @@
-svg * {
+/* ==========================================================
+   Dark Mode Detection via floorplan.dataset_set
+   hass.themes.darkMode sets data-theme="dark" on <svg id="svg1">
+   ========================================================== */
 
-}
-
-/* Define dark mode stroke color using CSS variable */
-:root {
-  --stroke-primary: #000000;
-  --fill-background: #ffffff;
-}
-
-/* Dark mode variable overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --stroke-primary: #ffffff;
-    --fill-background: #1a1a1a;
-  }
-}
-
-/* Comprehensive Dark Mode Detection for Home Assistant */
-/* Target all black strokes and convert to white in dark mode */
-[data-theme="dark"] svg [stroke="#000000"],
-[data-theme="dark"] svg [style*="stroke:#000000"],
-[data-theme="dark"] svg path[style*="stroke:#000000"],
-[data-theme="dark"] svg rect[style*="stroke:#000000"],
-body.dark-mode svg [stroke="#000000"],
-body.dark-mode svg [style*="stroke:#000000"],
-body.dark-mode svg path[style*="stroke:#000000"],
-body.dark-mode svg rect[style*="stroke:#000000"],
-.dark svg [stroke="#000000"],
-.dark svg [style*="stroke:#000000"],
-.dark svg path[style*="stroke:#000000"],
-.dark svg rect[style*="stroke:#000000"],
-ha-card[data-theme="dark"] svg [stroke="#000000"],
-ha-card[data-theme="dark"] svg [style*="stroke:#000000"],
-ha-card[data-theme="dark"] svg path[style*="stroke:#000000"],
-ha-card[data-theme="dark"] svg rect[style*="stroke:#000000"] {
+/* Black strokes → white in dark mode */
+svg[data-theme="dark"] [stroke="#000000"],
+svg[data-theme="dark"] [style*="stroke:#000000"] {
   stroke: #ffffff !important;
 }
 
-/* Target white fills and convert to dark background in dark mode */
-[data-theme="dark"] svg [fill="#ffffff"],
-[data-theme="dark"] svg [style*="fill:#ffffff"],
-[data-theme="dark"] svg path[style*="fill:#ffffff"],
-body.dark-mode svg [fill="#ffffff"],
-body.dark-mode svg [style*="fill:#ffffff"],
-body.dark-mode svg path[style*="fill:#ffffff"],
-.dark svg [fill="#ffffff"],
-.dark svg [style*="fill:#ffffff"],
-.dark svg path[style*="fill:#ffffff"],
-ha-card[data-theme="dark"] svg [fill="#ffffff"],
-ha-card[data-theme="dark"] svg [style*="fill:#ffffff"],
-ha-card[data-theme="dark"] svg path[style*="fill:#ffffff"] {
-  fill: #2a2a2a !important;
+/* White fills → dark background in dark mode */
+svg[data-theme="dark"] [fill="#ffffff"],
+svg[data-theme="dark"] [style*="fill:#ffffff"] {
+  fill: #1a1a1a !important;
 }
 
-/* Target black fills (text, icons) and convert to white in dark mode */
-[data-theme="dark"] svg [fill="#000000"],
-[data-theme="dark"] svg [style*="fill:#000000"],
-body.dark-mode svg [fill="#000000"],
-body.dark-mode svg [style*="fill:#000000"],
-.dark svg [fill="#000000"],
-.dark svg [style*="fill:#000000"],
-ha-card[data-theme="dark"] svg [fill="#000000"],
-ha-card[data-theme="dark"] svg [style*="fill:#000000"] {
+/* Black fills (text, icons) → white in dark mode */
+svg[data-theme="dark"] [fill="#000000"],
+svg[data-theme="dark"] [style*="fill:#000000"] {
   fill: #ffffff !important;
 }
 
-/* Fallback: Browser dark mode detection */
-@media (prefers-color-scheme: dark) {
-  svg [stroke="#000000"],
-  svg [style*="stroke:#000000"],
-  svg path[style*="stroke:#000000"],
-  svg rect[style*="stroke:#000000"] {
-    stroke: #ffffff !important;
-  }
-
-  svg [fill="#ffffff"],
-  svg [style*="fill:#ffffff"],
-  svg path[style*="fill:#ffffff"] {
-    fill: #2a2a2a !important;
-  }
-
-  svg [fill="#000000"],
-  svg [style*="fill:#000000"] {
-    fill: #ffffff !important;
-  }
-
-  /* Adjust gradient stops that use white */
-  svg stop[style*="stop-color:#ffffff"] {
-    stop-color: #2a2a2a !important;
-  }
+/* Gradient stops with white → dark in dark mode */
+svg[data-theme="dark"] stop[style*="stop-color:#ffffff"] {
+  stop-color: #1a1a1a !important;
 }
 
-/* Home Assistant specific dark mode - gradient stops */
-[data-theme="dark"] svg stop[style*="stop-color:#ffffff"],
-body.dark-mode svg stop[style*="stop-color:#ffffff"],
-.dark svg stop[style*="stop-color:#ffffff"],
-ha-card[data-theme="dark"] svg stop[style*="stop-color:#ffffff"] {
-  stop-color: #2a2a2a !important;
+/* ==========================================================
+   Floorplan class_set classes
+   ========================================================== */
+.hidden { display: none !important; }
+.oval-active { fill-opacity: 1; }
+.oval-inactive { fill-opacity: 0; }
+
+
+/* Temperatur Text – weißer Glow hinter schwarzem Text (Light Mode) */
+#TemperaturText {
+  font-size: 16px;
+  font-family: sans-serif;
+  filter: url(#text-glow-light);
 }
+
+/* Dark Mode – schwarzer Glow hinter weißem Text */
+svg[data-theme="dark"] #TemperaturText {
+  filter: url(#text-glow-dark);
+}
+
+/* ==========================================================
+   Element-specific styling
+   ========================================================== */
 
 /* Aschekasten base styling */
 #PelletmodulAschekasten {
