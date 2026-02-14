@@ -398,6 +398,7 @@ Contributions are welcome! Please:
 
 Currently tested:
 - ✅ **KWB CF2** with 2 heating circuits and 1 buffer storage
+- ✅ **KWB Combifire** with 1 heating circuits, 1 buffer storage tank and 1 domestic hot water tank
 
 **Wanted for testing:**
 - 🔍 Other KWB models (Easyfire, Multifire, Pelletfire+, Combifire, CF1, CF1.5)
