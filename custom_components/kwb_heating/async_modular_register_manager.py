@@ -256,15 +256,17 @@ class AsyncModularRegisterManager:
                         # Handle both exact match (PUF 0) and prefix match (HK 1.)
                         if equipment_type == "Heizkreise":
                             # Heating circuits use HK 1.1, HK 1.2, HK 2.1, etc.
-                            if index.startswith(f"{prefix} {i}."):
+                            # prefix HK wont work in english! - so wie just search for the pattern " 1." for HK/C 1, " 2." for HK/C 2, etc. (with space to avoid partial matches)
+                            if f" {i}." in index:
                                 filtered_registers.append(register)
                         else:
                             # Other equipment uses exact match (PUF 0, BWS 1, etc.)
-                            if index == f"{prefix} {i}":
-                                filtered_registers.append(register)
+                            # if we match on the FULL Index - we have the language problem again!
+                            if index.split()[-1] == f"{i}":
+                                filtered_registers.append(register)                          
             else:
                 # For unknown equipment types, use simple count-based filtering
-                instances_seen = set()
+                instances_seen: set[str] = set()
                 for register in equipment_registers:
                     index = register.get("index", "")
                     if index:

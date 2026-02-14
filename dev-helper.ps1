@@ -80,7 +80,7 @@ function Restart-Container {
 
 function Show-Logs {
     Write-Host "📋 Recent HA logs..." -ForegroundColor Cyan
-    docker logs kwb-hass-test --tail 50
+    docker logs kwb-hass-test --tail 500
 }
 
 function Show-KWBLogs {
